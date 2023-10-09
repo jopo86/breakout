@@ -1,0 +1,21 @@
+{
+	BitmapFont: {
+		pixellari: {
+			file: ..\\fonts\\pixellari.fnt
+		}
+	}
+
+	TextButtonStyle: {
+		default: {
+			down: default-round-down,
+			up: default-round
+			font: pixellari
+		}
+	}
+
+	WindowStyle: {
+		default: {
+			titleFont: pixellari
+		}
+	}
+}
