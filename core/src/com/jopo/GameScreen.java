@@ -5,6 +5,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
@@ -28,6 +29,8 @@ public class GameScreen implements Screen, InputProcessor {
     private Image ball;
     private ArrayList<ArrayList<Image>> bricks;
     private Image paddle;
+
+    private SpriteBatch batch;
 
     private int score = 0;
     private int vx = 0;
@@ -55,6 +58,8 @@ public class GameScreen implements Screen, InputProcessor {
         paddle.setSize(PADDLE_DIMENSIONS.width, PADDLE_DIMENSIONS.height);
         paddle.setPosition(Gdx.graphics.getWidth() / 2f - paddle.getWidth() / 2f, 50f);
         paddle.setName("paddle");
+
+        batch = new SpriteBatch();
 
         stage.addActor(ball);
         stage.addActor(paddle);
@@ -251,12 +256,12 @@ public class GameScreen implements Screen, InputProcessor {
     public void render(float delta) {
         update(delta);
         ScreenUtils.clear(.1f, .105f, .15f, 1f);
-        stage.getBatch().begin();
-        game.pixellari64.setColor(1f, 1f, 1f, .5f);
-        game.pixellari64.draw(stage.getBatch(), String.valueOf(score), 30f, 720f - 30f);
-        stage.getBatch().end();
         stage.act(delta);
         stage.draw();
+        batch.begin();
+        game.pixellari64.setColor(1f, 1f, 1f, .5f);
+        game.pixellari64.draw(batch, String.valueOf(score), 30f, 720 - 30f);
+        batch.end();
     }
 
     @Override
