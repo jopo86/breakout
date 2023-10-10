@@ -1,21 +1,40 @@
 {
 	BitmapFont: {
-		pixellari: {
-			file: ..\\fonts\\pixellari.fnt
+		pixellari-32: {
+			file: ..\\fonts\\pixellari-32.fnt
 		}
+		pixellari-64: {
+			file: ..\\fonts\\pixellari-64.fnt
+		}
+	}
+
+	Color: {
+		gameOverRed: { r: 1, g: .5, b: .5, a: 1 }
+		victoryGreen: { r: .7, g: 1, b: .7, a: 1 }
 	}
 
 	TextButtonStyle: {
 		default: {
 			down: default-round-down,
 			up: default-round
-			font: pixellari
+			font: pixellari-32
 		}
 	}
 
 	WindowStyle: {
 		default: {
-			titleFont: pixellari
+			titleFont: pixellari-32
+		}
+		large: {
+			titleFont: pixellari-64
+		}
+		game-over: {
+			titleFont: pixellari-64
+			titleFontColor: gameOverRed
+		}
+		victory: {
+			titleFont: pixellari-64
+			titleFontColor: victoryGreen
 		}
 	}
 }

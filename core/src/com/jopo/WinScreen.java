@@ -2,6 +2,7 @@ package com.jopo;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
@@ -12,7 +13,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-public class MainMenuScreen implements Screen {
+public class WinScreen implements Screen {
 
     private Stage stage;
     private Table uiTable;
@@ -20,15 +21,15 @@ public class MainMenuScreen implements Screen {
     private TextButton startGameButton;
     private TextButton quitGameButton;
 
-    public MainMenuScreen(final Breakout game) {
+    public WinScreen(final Breakout game) {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         uiTable = new Table();
         uiTable.setFillParent(true);
         uiTable.align(Align.center | Align.top);
-        titleDialog = new Dialog("BREAKOUT", game.uiSkin, "large");
+        titleDialog = new Dialog("YOU WIN!", game.uiSkin, "victory");
 
-        startGameButton = new TextButton("START GAME", game.uiSkin);
+        startGameButton = new TextButton("NEW GAME", game.uiSkin);
         startGameButton.pad(10f);
         startGameButton.addListener(new ClickListener() {
             @Override
@@ -53,6 +54,8 @@ public class MainMenuScreen implements Screen {
         uiTable.add(quitGameButton);
 
         stage.addActor(uiTable);
+
+        game.victorySound.play();
     }
 
     @Override
