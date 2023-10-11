@@ -8,7 +8,10 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
@@ -29,13 +32,18 @@ public class GameScreen implements Screen, InputProcessor {
     private Image ball;
     private ArrayList<ArrayList<Image>> bricks;
     private Image paddle;
-
     private SpriteBatch batch;
+    private Table pauseTable;
+    private Dialog gamePausedDialog;
+    private Dialog escToResumeDialog;
+    private Dialog qToQuitDialog;
+    private ArrayList<Color> actorColors;
+    private boolean isPaused = false;
 
     private int score = 0;
     private int vx = 0;
-    private int vy = -300;
-    private float v = 200;
+    private int vy = 0;
+    private float v = 0;
     private float pv = 0;
     private float lastPaddleX = 0;
 
@@ -45,6 +53,7 @@ public class GameScreen implements Screen, InputProcessor {
 
     public GameScreen(final Breakout game) {
         this.game = game;
+        vy = -game.startVelocity;
 
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(this);
@@ -65,10 +74,30 @@ public class GameScreen implements Screen, InputProcessor {
         stage.addActor(paddle);
         populateBricks();
 
+        actorColors = new ArrayList<>();
+
+        pauseTable = new Table();
+        pauseTable.setFillParent(true);
+        pauseTable.align(Align.center | Align.top);
+        pauseTable.setName("pauseTable");
+
+        gamePausedDialog = new Dialog("GAME PAUSED", game.uiSkin, "large");
+        gamePausedDialog.setName("gamePausedDialog");
+        escToResumeDialog = new Dialog("[ESC] TO RESUME", game.uiSkin, "default");
+        escToResumeDialog.setName("escToResumeDialog");
+        qToQuitDialog = new Dialog("[Q] TO QUIT", game.uiSkin, "default");
+
+        pauseTable.padTop(300).add(gamePausedDialog).padBottom(50f).row();
+        pauseTable.add(escToResumeDialog).padBottom(30f).row();
+        pauseTable.add(qToQuitDialog);
+
         Gdx.input.setCursorCatched(true);
     }
 
     private void update(float delta) {
+        // don't update if paused
+        if (isPaused) return;
+
         // win test
         tempBool = true;
         for (Actor actor : stage.getActors()) if (actor.getName().equals("brick")) tempBool = false;
@@ -168,21 +197,21 @@ public class GameScreen implements Screen, InputProcessor {
         }
 
         // wall collision tests
-        if (ball.getY() + ball.getHeight() >= 720 && vy > 0) { // ceiling collision
+        if (getBallTop() >= 720 && vy > 0) { // ceiling collision
             vy = -Math.abs(vy);
             game.bounceSound.play();
         }
-        if (ball.getY() + ball.getHeight() <= 0 && vy < 0) { // floor collision = death
+        if (getBallTop() <= 0 && vy < 0) { // floor collision = death
             try { Thread.sleep(1000); } catch(InterruptedException e){ throw new RuntimeException(e.getMessage()); }
             game.setScreen(new GameOverScreen(game));
             Gdx.input.setCursorCatched(false);
             game.bounceSound.play();
         }
-        if ((ball.getX() <= 0 && vx < 0)) { // left wall collision
+        if (getBallLeft() <= 0 && vx < 0) { // left wall collision
             vx = Math.abs(vx);
             game.bounceSound.play();
         }
-        if ((ball.getX() + ball.getWidth() >= 1280 && vx > 0)) { // right wall collision
+        if (getBallRight() >= 1280 && vx > 0) { // right wall collision
             vx = -Math.abs(vx);
             game.bounceSound.play();
         }
@@ -203,7 +232,7 @@ public class GameScreen implements Screen, InputProcessor {
                 bricks.get(row).get(col).setSize(BRICK_DIMENSIONS.width, BRICK_DIMENSIONS.height);
                 bricks.get(row).get(col).setPosition(100f + col * (BRICK_DIMENSIONS.width + BRICK_GAP), Gdx.graphics.getHeight() - (100 + row * (BRICK_DIMENSIONS.height + BRICK_GAP)));
                 bricks.get(row).get(col).setName("brick");
-                stage.addActor(bricks.get(row).get(col));
+                if (row == 0 && col == 0) stage.addActor(bricks.get(row).get(col));
             }
         }
     }
@@ -291,7 +320,19 @@ public class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean keyDown(int keycode) {
-        if (keycode == Input.Keys.ESCAPE) Gdx.input.setCursorCatched(!Gdx.input.isCursorCatched());
+        if (keycode == Input.Keys.ESCAPE) {
+            isPaused = !isPaused;
+            if (isPaused) {
+                Gdx.input.setCursorCatched(false);
+                stage.addActor(pauseTable);
+            }
+            else {
+                Gdx.input.setCursorCatched(true);
+                Gdx.input.setCursorPosition((int)getPaddleCenterX(), (int)(Gdx.graphics.getHeight() / 2f));
+                pauseTable.remove();
+            }
+        };
+        if (keycode == Input.Keys.Q && isPaused) Gdx.app.exit();
         return true;
     }
 
@@ -327,7 +368,9 @@ public class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
-        paddle.setX(screenX - paddle.getWidth() / 2f);
+        if (!isPaused) {
+            paddle.setX(screenX - paddle.getWidth() / 2f);
+        }
         return true;
     }
 

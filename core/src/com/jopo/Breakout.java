@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
+import javax.swing.*;
+
 public class Breakout extends Game {
 
 	Skin uiSkin;
@@ -20,8 +22,10 @@ public class Breakout extends Game {
 	Sound gameOverSound;
 	Sound victorySound;
 
+	int startVelocity;
+
 	@Override
-	public void create () {
+	public void create() {
 		uiSkin = new Skin(Gdx.files.internal("ui\\uiskin.json"));
 		pixellari64 = new BitmapFont(Gdx.files.internal("fonts\\pixellari-64.fnt"));
 
@@ -33,16 +37,18 @@ public class Breakout extends Game {
 		gameOverSound = Gdx.audio.newSound(Gdx.files.internal("audio\\game-over.ogg"));
 		victorySound = Gdx.audio.newSound(Gdx.files.internal("audio\\victory.ogg"));
 
+		startVelocity = Integer.parseInt(JOptionPane.showInputDialog("Type start velocity (default 300)"));
+
 		setScreen(new MainMenuScreen(this));
 	}
 
 	@Override
-	public void render () {
+	public void render() {
 		super.render();
 	}
 	
 	@Override
-	public void dispose () {
+	public void dispose() {
 		uiSkin.dispose();
 		pixellari64.dispose();
 		ballTexture.dispose();
