@@ -1,11 +1,9 @@
 package com.jopo;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
@@ -13,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import java.awt.Dimension;
@@ -39,13 +38,14 @@ public class GameScreen implements Screen, InputProcessor {
     private Dialog qToQuitDialog;
     private ArrayList<Color> actorColors;
     private boolean isPaused = false;
+    private float lastPaddleX;
+    private int lastMouseX;
 
     private int score = 0;
     private int vx = 0;
     private int vy = 0;
     private float v = 0;
     private float pv = 0;
-    private float lastPaddleX = 0;
 
     private boolean tempBool = false;
     private String tempString = "";
@@ -53,10 +53,10 @@ public class GameScreen implements Screen, InputProcessor {
 
     public GameScreen(final Breakout game) {
         this.game = game;
-        vy = -game.startVelocity;
+        vy = -Math.abs(game.startVelocity);
+        lastMouseX = Gdx.input.getX();
 
         stage = new Stage(new ScreenViewport());
-        Gdx.input.setInputProcessor(this);
 
         ball = new Image(game.ballTexture);
         ball.setSize(BALL_DIMENSIONS.width, BALL_DIMENSIONS.height);
@@ -67,6 +67,7 @@ public class GameScreen implements Screen, InputProcessor {
         paddle.setSize(PADDLE_DIMENSIONS.width, PADDLE_DIMENSIONS.height);
         paddle.setPosition(Gdx.graphics.getWidth() / 2f - paddle.getWidth() / 2f, 50f);
         paddle.setName("paddle");
+        lastPaddleX = paddle.getX();
 
         batch = new SpriteBatch();
 
@@ -87,10 +88,11 @@ public class GameScreen implements Screen, InputProcessor {
         escToResumeDialog.setName("escToResumeDialog");
         qToQuitDialog = new Dialog("[Q] TO QUIT", game.uiSkin, "default");
 
-        pauseTable.padTop(300).add(gamePausedDialog).padBottom(50f).row();
+        pauseTable.padTop(290).add(gamePausedDialog).padBottom(60f).row();
         pauseTable.add(escToResumeDialog).padBottom(30f).row();
         pauseTable.add(qToQuitDialog);
 
+        Gdx.input.setInputProcessor(this);
         Gdx.input.setCursorCatched(true);
     }
 
@@ -104,17 +106,12 @@ public class GameScreen implements Screen, InputProcessor {
         if (tempBool) {
             try { Thread.sleep(1000); } catch(InterruptedException e){ throw new RuntimeException(e.getMessage()); }
             game.setScreen(new WinScreen(game));
-            Gdx.input.setCursorCatched(false);
         }
 
         pv = (getPaddleCenterX() - lastPaddleX) / delta;
 
         v = (float)Math.sqrt(vx*vx + vy*vy);
         ball.moveBy(vx * delta, vy * delta);
-
-        // keep paddle in bounds
-        if (paddle.getX() < 0) paddle.setX(0);
-        if (paddle.getX() + paddle.getWidth() > 1280) paddle.setX(1280 - paddle.getWidth());
 
         // actor collision tests
         // top
@@ -202,10 +199,13 @@ public class GameScreen implements Screen, InputProcessor {
             game.bounceSound.play();
         }
         if (getBallTop() <= 0 && vy < 0) { // floor collision = death
-            try { Thread.sleep(1000); } catch(InterruptedException e){ throw new RuntimeException(e.getMessage()); }
-            game.setScreen(new GameOverScreen(game));
-            Gdx.input.setCursorCatched(false);
-            game.bounceSound.play();
+            isPaused = true;
+            Timer.schedule(new Timer.Task() {
+                @Override
+                public void run() {
+                    game.setScreen(new GameOverScreen(game));
+                }
+            }, 1f);
         }
         if (getBallLeft() <= 0 && vx < 0) { // left wall collision
             vx = Math.abs(vx);
@@ -232,7 +232,7 @@ public class GameScreen implements Screen, InputProcessor {
                 bricks.get(row).get(col).setSize(BRICK_DIMENSIONS.width, BRICK_DIMENSIONS.height);
                 bricks.get(row).get(col).setPosition(100f + col * (BRICK_DIMENSIONS.width + BRICK_GAP), Gdx.graphics.getHeight() - (100 + row * (BRICK_DIMENSIONS.height + BRICK_GAP)));
                 bricks.get(row).get(col).setName("brick");
-                if (row == 0 && col == 0) stage.addActor(bricks.get(row).get(col));
+                stage.addActor(bricks.get(row).get(col));
             }
         }
     }
@@ -321,15 +321,17 @@ public class GameScreen implements Screen, InputProcessor {
     @Override
     public boolean keyDown(int keycode) {
         if (keycode == Input.Keys.ESCAPE) {
-            isPaused = !isPaused;
-            if (isPaused) {
+            if (!isPaused) {
+                isPaused = true;
                 Gdx.input.setCursorCatched(false);
+                lastMouseX = (int)paddle.getX();
                 stage.addActor(pauseTable);
             }
             else {
                 Gdx.input.setCursorCatched(true);
-                Gdx.input.setCursorPosition((int)getPaddleCenterX(), (int)(Gdx.graphics.getHeight() / 2f));
+                Gdx.input.setCursorPosition((int)paddle.getX(), (int)(Gdx.graphics.getHeight() / 2f));
                 pauseTable.remove();
+                isPaused = false;
             }
         };
         if (keycode == Input.Keys.Q && isPaused) Gdx.app.exit();
@@ -369,7 +371,10 @@ public class GameScreen implements Screen, InputProcessor {
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
         if (!isPaused) {
-            paddle.setX(screenX - paddle.getWidth() / 2f);
+            int deltaX = screenX - lastMouseX;
+            paddle.moveBy(deltaX, 0);
+            paddle.setX(MathUtils.clamp(paddle.getX(), 0 , 1280 - paddle.getWidth()));
+            lastMouseX = screenX;
         }
         return true;
     }

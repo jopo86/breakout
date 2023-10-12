@@ -22,7 +22,7 @@ public class Breakout extends Game {
 	Sound gameOverSound;
 	Sound victorySound;
 
-	int startVelocity;
+	int startVelocity = 300;
 
 	@Override
 	public void create() {
@@ -37,14 +37,10 @@ public class Breakout extends Game {
 		gameOverSound = Gdx.audio.newSound(Gdx.files.internal("audio\\game-over.ogg"));
 		victorySound = Gdx.audio.newSound(Gdx.files.internal("audio\\victory.ogg"));
 
-		startVelocity = Integer.parseInt(JOptionPane.showInputDialog("Type start velocity (default 300)"));
+		String tmp = JOptionPane.showInputDialog("Type start velocity (default 300)");
+		 if (tmp != null) if (!tmp.isEmpty()) startVelocity = Integer.parseInt(tmp);
 
 		setScreen(new MainMenuScreen(this));
-	}
-
-	@Override
-	public void render() {
-		super.render();
 	}
 	
 	@Override
