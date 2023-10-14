@@ -17,16 +17,20 @@ public class WinScreen implements Screen {
     private Stage stage;
     private Table uiTable;
     private Dialog titleDialog;
+    private Dialog scoreDialog;
+    private Dialog highScoreDialog;
     private TextButton startGameButton;
     private TextButton quitGameButton;
 
-    public WinScreen(final Breakout game) {
+    public WinScreen(final Breakout game, int score) {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         uiTable = new Table();
         uiTable.setFillParent(true);
         uiTable.align(Align.center | Align.top);
         titleDialog = new Dialog("YOU WIN!", game.uiSkin, "victory");
+        scoreDialog = new Dialog("SCORE: " + score, game.uiSkin, "default");
+        highScoreDialog = new Dialog("HIGH SCORE: " + game.highScore, game.uiSkin, "default");
 
         startGameButton = new TextButton("NEW GAME", game.uiSkin);
         startGameButton.pad(10f);
@@ -50,7 +54,11 @@ public class WinScreen implements Screen {
 
         uiTable.padTop(250f).add(titleDialog).padBottom(70f).row();
         uiTable.add(startGameButton).padBottom(30f).row();
-        uiTable.add(quitGameButton);
+        uiTable.add(quitGameButton).padBottom(170f).row();
+        uiTable.add(scoreDialog).padBottom(30f).row();
+        uiTable.add(highScoreDialog);
+        highScoreDialog.setZIndex(0);
+        scoreDialog.setZIndex(0);
 
         stage.addActor(uiTable);
 

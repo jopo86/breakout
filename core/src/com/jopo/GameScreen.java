@@ -104,8 +104,7 @@ public class GameScreen implements Screen, InputProcessor {
         tempBool = true;
         for (Actor actor : stage.getActors()) if (actor.getName().equals("brick")) tempBool = false;
         if (tempBool) {
-            try { Thread.sleep(1000); } catch(InterruptedException e){ throw new RuntimeException(e.getMessage()); }
-            game.setScreen(new WinScreen(game));
+            win();
         }
 
         pv = (getPaddleCenterX() - lastPaddleX) / delta;
@@ -148,7 +147,7 @@ public class GameScreen implements Screen, InputProcessor {
                         int offset = (int)(getBallCenterX() - getPaddleCenterX());
                         vx += (offset * 3) + (int)pv;
                         if (Math.abs(vx) >= v - 30f) vx = (vx > 0 ? (int)v - 30 : (int)-v + 30);
-                        vy = (int)Math.sqrt(v*v - vx*vx);
+                        vy = Math.abs((int)Math.sqrt(v*v - vx*vx));
 
                     }
                     tempActor = null;
@@ -199,13 +198,7 @@ public class GameScreen implements Screen, InputProcessor {
             game.bounceSound.play();
         }
         if (getBallTop() <= 0 && vy < 0) { // floor collision = death
-            isPaused = true;
-            Timer.schedule(new Timer.Task() {
-                @Override
-                public void run() {
-                    game.setScreen(new GameOverScreen(game));
-                }
-            }, 1f);
+            lose();
         }
         if (getBallLeft() <= 0 && vx < 0) { // left wall collision
             vx = Math.abs(vx);
@@ -234,6 +227,35 @@ public class GameScreen implements Screen, InputProcessor {
                 bricks.get(row).get(col).setName("brick");
                 stage.addActor(bricks.get(row).get(col));
             }
+        }
+    }
+
+    private void win() {
+        isPaused = true;
+        saveHighScore();
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                game.setScreen(new WinScreen(game, score));
+            }
+        }, 1f);
+    }
+
+    private void lose() {
+        isPaused = true;
+        saveHighScore();
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                game.setScreen(new GameOverScreen(game, score));
+            }
+        }, 1f);
+    }
+
+    private void saveHighScore() {
+        if (score > game.highScore) {
+            FileUtils.writeFile(Gdx.files.internal("save\\highScore.save"), String.valueOf(score));
+            game.highScore = score;
         }
     }
 
