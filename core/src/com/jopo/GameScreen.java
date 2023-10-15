@@ -257,7 +257,7 @@ public class GameScreen implements Screen, InputProcessor {
             Timer.schedule(new Timer.Task() {
                 @Override
                 public void run() {
-                    ball.setPosition(Gdx.graphics.getWidth() / 2f - ball.getWidth() / 2f, 150f);
+                    ball.setPosition(Gdx.graphics.getWidth() / 2f - ball.getWidth() / 2f, 325f);
                     paddle.setPosition(Gdx.graphics.getWidth() / 2f - paddle.getWidth() / 2f, 50f);
                     vy = (int) -Math.abs(v);
                     vx = 0;
