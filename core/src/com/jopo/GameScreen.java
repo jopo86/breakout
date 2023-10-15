@@ -42,6 +42,7 @@ public class GameScreen implements Screen, InputProcessor {
     private int lastMouseX;
 
     private int score = 0;
+    private int lives = 3;
     private int vx = 0;
     private int vy = 0;
     private float v = 0;
@@ -243,13 +244,28 @@ public class GameScreen implements Screen, InputProcessor {
 
     private void lose() {
         isPaused = true;
-        saveHighScore();
-        Timer.schedule(new Timer.Task() {
-            @Override
-            public void run() {
-                game.setScreen(new GameOverScreen(game, score));
-            }
-        }, 1f);
+        lives--;
+        if (lives == 0) {
+            saveHighScore();
+            Timer.schedule(new Timer.Task() {
+                @Override
+                public void run() {
+                    game.setScreen(new GameOverScreen(game, score));
+                }
+            }, 1f);
+        } else {
+            Timer.schedule(new Timer.Task() {
+                @Override
+                public void run() {
+                    ball.setPosition(Gdx.graphics.getWidth() / 2f - ball.getWidth() / 2f, 150f);
+                    paddle.setPosition(Gdx.graphics.getWidth() / 2f - paddle.getWidth() / 2f, 50f);
+                    vy = (int) -Math.abs(v);
+                    vx = 0;
+                    isPaused = false;
+                }
+            }, 1f);
+
+        }
     }
 
     private void saveHighScore() {
@@ -396,8 +412,8 @@ public class GameScreen implements Screen, InputProcessor {
             int deltaX = screenX - lastMouseX;
             paddle.moveBy(deltaX, 0);
             paddle.setX(MathUtils.clamp(paddle.getX(), 0 , 1280 - paddle.getWidth()));
-            lastMouseX = screenX;
         }
+        lastMouseX = screenX;
         return true;
     }
 
